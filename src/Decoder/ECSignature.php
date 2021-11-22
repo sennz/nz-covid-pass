@@ -47,3 +47,24 @@ final class ECSignature
 
         return $bin;
     }
+    
+    private static function octetLength(string $data): int
+    {
+        return intdiv(mb_strlen($data, '8bit'), self::BYTE_SIZE);
+    }
+
+    private static function preparePositiveInteger(string $data): string
+    {
+        if (mb_substr($data, 0, self::BYTE_SIZE, '8bit') > self::ASN1_BIG_INTEGER_LIMIT) {
+            return self::ASN1_NEGATIVE_INTEGER.$data;
+        }
+
+        while (0 === mb_strpos($data, self::ASN1_NEGATIVE_INTEGER, 0, '8bit')
+            && mb_substr($data, 2, self::BYTE_SIZE, '8bit') <= self::ASN1_BIG_INTEGER_LIMIT) {
+                $data = mb_substr($data, 2, null, '8bit');
+            }
+
+            return $data;
+    }
+}
+                   
