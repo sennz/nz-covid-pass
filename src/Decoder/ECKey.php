@@ -1,5 +1,5 @@
 <?php
-namespace SenNZ\NZCovidPass;
+namespace SenNZ\NZCovidPass\Decoder;
 
 use function extension_loaded;
 use InvalidArgumentException;
