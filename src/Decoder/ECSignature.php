@@ -1,6 +1,6 @@
 <?php
 
-namespace SenNZ\NZCovidPass;
+namespace SenNZ\NZCovidPass\Decoder;
 
 use GuzzleHttp\Exception\InvalidArgumentException;
 
