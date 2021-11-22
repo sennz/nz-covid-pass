@@ -129,19 +129,19 @@ class NZCovidPassDecoder
         return $response;
     }
     
-    private function validateKid(array $cbor, $certificates)
+    private function validateKid(array $cbor, $keys)
     {
-        $id = $cbor["data"][1];
-        $key = $cbor['protected'][4];
+        $id = isset($cbor["data"][1])? $cbor["data"][1] : "";
+        $key = isset($cbor['protected'][4]) ? $cbor['protected'][4] : "";
         $cbor_assertion = $id . "#" . $key;
 
-        $cert_assertion = $certificates["assertionMethod"][0];
+        $cert_assertion = $keys["assertionMethod"][0];
 
         if ($cbor_assertion != $cert_assertion) {
             throw new \InvalidArgumentException('Invalid KID');
         }
 
-        $pk = $certificates["verificationMethod"][0]["publicKeyJwk"];
+        $pk = $keys["verificationMethod"][0]["publicKeyJwk"];
 
         return $pk;
     }
@@ -170,10 +170,10 @@ class NZCovidPassDecoder
 
         $pem = "";
 
-        $certificates = static::retrievekeys();
-        $signingCertificate = static::validateKid($cbor, $certificates);
+        $keys = $this->retrievekeys();
+        $signingKeys = $this->validateKid($cbor, $keys);
 
-        $jwk = new JWK($signingCertificate);
+        $jwk = new JWK($signingKeys);
         $ec_key = new ECKey;
         $pem = $ec_key->convertToPEM($jwk);
   
