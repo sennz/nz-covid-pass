@@ -11,21 +11,16 @@ use CBOR\TextStringObject;
 use CBOR\OtherObject\OtherObjectManager;
 use CBOR\Tag\TagObjectManager;
 
-use SenNZ\NZCovidPass\Decoder\CoseSignTagNZ;
+use SenNZ\NZCovidPass\Decoder\CoseSign1Tag;
 use SenNZ\NZCovidPass\Decoder\JWK;
 use SenNZ\NZCovidPass\Decoder\ECSignature;
 use SenNZ\NZCovidPass\Decoder\ECKey;
 
 class NZCovidPassDecoder
 {
-    const JSON = 'json';
-
-    const GET_CERTIFICATE_FROM = 'json';
-
-     public function getVPPdata($raw_data) {
-      $data = $this->qrcode($raw_data);
-
-      return $data;
+    public function getNZPassData($raw_data) {
+       $data = $this->qrcode($raw_data);
+       return $data;
     }
 
 
@@ -34,50 +29,34 @@ class NZCovidPassDecoder
         try {
           return Base32::decode($base32);
         } catch (\Exception $e) {
-          return response()->json([
-                'status'  => 'error',
-                'message' => '1. Invalid data',
-          ]);
+          throw new \InvalidArgumentException('Invalid data');  
         }
     }
 
     private  function cose($cose)
     {
-
         $stream = new StringStream($cose);
 
         $tagObjectManager = new TagObjectManager();
-        $tagObjectManager->add(CoseSignTagNZ::class);
+        $tagObjectManager->add(CoseSign1Tag::class);
 
         $cborDecoder = new \CBOR\Decoder($tagObjectManager, new OtherObjectManager());
 
-        $cbor = $cborDecoder->decode($stream); // We decode the data
+        // We decode the data
+        $cbor = $cborDecoder->decode($stream); 
 
 
         if (! $cbor instanceof CoseSignTagNZ) {
-            //throw new \InvalidArgumentException('Not a valid certificate. Not a CoseSign1 type.');
-            return response()->json([
-                'status'  => 'error',
-                'message' => 'Not a valid certificate. Not a CoseSign1 type',
-            ]);
+            throw new \InvalidArgumentException('Not a valid certificate. Not a CoseSign1 type.');
         }
-
 
         $list = $cbor->getValue();
         if (! $list instanceof ListObject) {
-            //throw new \InvalidArgumentException('Not a valid certificate. No list.');
-            return response()->json([
-                'status'  => 'error',
-                'message' => 'Not a valid certificate. No list',
-            ]);
+            throw new \InvalidArgumentException('Not a valid certificate. No list.');
         }
 
         if (4 !== $list->count()) {
-            //throw new \InvalidArgumentException('Not a valid certificate. The list size is not correct.');
-            return response()->json([
-                'status'  => 'error',
-                'message' => 'Not a valid certificate. The list size is not correct',
-            ]);
+            throw new \InvalidArgumentException('Not a valid certificate. The list size is not correct.');
         }
         return $list;
     }
@@ -115,16 +94,15 @@ class NZCovidPassDecoder
         return $decoded;
     }
 
-     // Retrieve from JSON Country/KID
-    private function retrieveCertificates()
-    {
+    // Retrieve keys
+    private function retrieveKeys() {
         // We retrieve the public keys
-        $uri = public_path('cert/did.json');
+        $uri = '../../cert/did.json';
 
         $is_file_expired = time() - filemtime($uri) > 24 * 3600;
 
         if ($is_file_expired) {
-          $str = $this->retrieveCertificateFromWeb();
+          $str = $this->retrieveKeysFromWeb();
           if(!empty($str)){
             $fp = fopen($uri, 'w');
             fwrite($fp, $str);
@@ -134,11 +112,11 @@ class NZCovidPassDecoder
           }
         }
         // We decode the JSON object we received
-        $certificates = json_decode(file_get_contents($uri), true, 512);
-        return $certificates;
+        $keys = json_decode(file_get_contents($uri), true, 512);
+        return $keys;
     }
 
-    private function retrieveCertificateFromWeb()
+    private function retrieveKeysFromWeb()
     {
         // We retrieve the public keys update manullay
         $ch = curl_init('https://nzcp.identity.health.nz/.well-known/did.json');
@@ -150,6 +128,7 @@ class NZCovidPassDecoder
         curl_close($ch);
         return $response;
     }
+    
     private function validateKid(array $cbor, $certificates)
     {
         $id = $cbor["data"][1];
@@ -157,7 +136,6 @@ class NZCovidPassDecoder
         $cbor_assertion = $id . "#" . $key;
 
         $cert_assertion = $certificates["assertionMethod"][0];
-
 
         if ($cbor_assertion != $cert_assertion) {
             throw new \InvalidArgumentException('Invalid KID');
@@ -167,7 +145,8 @@ class NZCovidPassDecoder
 
         return $pk;
     }
-    public function qrcode(string $qrcode)
+    
+    private function qrcode(string $qrcode)
     {
         if (! substr($qrcode, 0, 5) === 'NZCP:') {
             throw new \InvalidArgumentException('Invalid NZCP Header');
@@ -179,9 +158,7 @@ class NZCovidPassDecoder
 
         $b32 = $this->base32(mb_substr($qrcode, 8));
 
-
         $cose = $this->cose($b32);
-        //$cose = $this->cose($this->zlib($zlib));
         $cbor = $this->cbor($cose);
 
         $expiry = isset($cbor["data"][4]) ? $cbor["data"][4] : 0;
@@ -193,20 +170,13 @@ class NZCovidPassDecoder
 
         $pem = "";
 
-        if (static::GET_CERTIFICATE_FROM == static::JSON) {
-            $certificates = static::retrieveCertificates();
-            $signingCertificate = static::validateKid($cbor, $certificates);
+        $certificates = static::retrievekeys();
+        $signingCertificate = static::validateKid($cbor, $certificates);
 
-            if (isset($signingCertificate->original["status"]) && $signingCertificate->original["status"]=="error") {
-              throw new InvalidArgumentException('Invalid KID');
-            }
-
-            $jwk = new JWK($signingCertificate);
-            $ec_key = new ECKey;
-            $pem = $ec_key->convertToPEM($jwk);
-        }
-
-
+        $jwk = new JWK($signingCertificate);
+        $ec_key = new ECKey;
+        $pem = $ec_key->convertToPEM($jwk);
+  
         // The object is the data that should have been signed
         $structure = new ListObject();
         $structure->add(new TextStringObject('Signature1'));
@@ -229,7 +199,6 @@ class NZCovidPassDecoder
 
         $isValid = openssl_verify((string) $structure, $derSignature, $pkey, OPENSSL_ALGO_SHA256);
 
-
         if ($isValid != 1) {
             while ($m = openssl_error_string()) {
                //to debug
@@ -237,7 +206,6 @@ class NZCovidPassDecoder
             }
             throw new \InvalidArgumentException('The signature is NOT valid');
         }
-
         return $cbor['data']["vc"]["credentialSubject"];
     }
 }
