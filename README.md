@@ -1,0 +1,2 @@
+# NZ-COVID-Pass
+NZ COVID Pass PHP SDK
