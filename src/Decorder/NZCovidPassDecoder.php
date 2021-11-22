@@ -201,8 +201,7 @@ class NZCovidPassDecoder
 
         if ($isValid != 1) {
             while ($m = openssl_error_string()) {
-               //to debug
-               //static::dump("OpenSSL Error ", $m);
+               //print to debug               
             }
             throw new \InvalidArgumentException('The signature is NOT valid');
         }
