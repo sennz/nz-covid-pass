@@ -1,5 +1,5 @@
 <?php
-namespace SenNZ\NZCovidPass;
+namespace SenNZ\NZCovidPass\Decoder;
 
 use Base64Url\Base64Url;
 use InvalidArgumentException;
