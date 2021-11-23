@@ -17,4 +17,9 @@ class NZCovidPass {
        throw new \InvalidArgumentException('Invalid data');  
      }
    }
+   
+   public function getNZPassData() {
+     return $this->data;
+   }
+
 }
