@@ -1,5 +1,5 @@
 {
- "name" : "sennz/nz-covid-pass-php",
+ "name" : "sennz/nz-covid-pass",
  "description" : "NZ Covid Pass PHP SDK",
  "require" : {
    "php": ">=7.2",
