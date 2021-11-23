@@ -46,7 +46,7 @@ class NZCovidPassDecoder
         $cbor = $cborDecoder->decode($stream); 
 
 
-        if (! $cbor instanceof CoseSignTagNZ) {
+        if (! $cbor instanceof CoseSign1Tag) {
             throw new \InvalidArgumentException('Not a valid certificate. Not a CoseSign1 type.');
         }
 
@@ -65,7 +65,7 @@ class NZCovidPassDecoder
     {
         $decoded = array();
         $tagObjectManager = new TagObjectManager();
-        $tagObjectManager->add(CoseSignTagNZ::class);
+        $tagObjectManager->add(CoseSign1Tag::class);
         $cborDecoder = new \CBOR\Decoder(new TagObjectManager(), new OtherObjectManager());
 
         $h1 = $list->get(0); // The first item corresponds to the protected header
