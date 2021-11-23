@@ -24,5 +24,14 @@ class JWK implements JsonSerializable
         $this->values = $values;
     }
 
+
+    /**
+     * Returns the values to be serialized.
+     */
+    public function jsonSerialize(): array
+    {
+        return $this->values;
+    }
+
 }
 
