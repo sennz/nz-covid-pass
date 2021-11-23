@@ -10,9 +10,10 @@ PHP >= 7.2
 
 <b>Usage</b>
 
-<code><br/>
-$pass = new NZCovidPass($strQRCode,$path_to_save_did_file);<br/>
-$data = $pass->getNZPassData();<br/>
+<code>\n
+$pass = new NZCovidPass($strQRCode,$path_to_save_did_file);
+  \n
+$data = $pass->getNZPassData();\n
 </code>
 
 $strQRCode - Covid Pass QR Code Data<br/>
