@@ -4,7 +4,7 @@ namespace SenNZ\NZCovidPass\Decoder;
 use function extension_loaded;
 use InvalidArgumentException;
 use function is_array;
-use SenNZ\NZCovidPasss\JWK;
+use SenNZ\NZCovidPasss\Decoder\JWK;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use RuntimeException;
 
