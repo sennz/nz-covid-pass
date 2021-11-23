@@ -5,8 +5,7 @@
    "php": ">=7.2",
    "guzzlehttp/guzzle" : "^6.3",   
    "christian-riesen/base32": "^1.6",
-   "spomky-labs/base64url": "^2.0",
-   "spomky-labs/cbor-php" : "^2.0",
+   "spomky-labs/cbor-php": "^1.1",
    "paragonie/constant_time_encoding": "^2.4"
  },
  "autoload" : {
