@@ -5,7 +5,7 @@ It is based on Ministry of Health technical specification
 
 https://nzcp.covid19.health.nz/
 
-<b>Requirement</b>
+<b>Requirement</b><br/>
 PHP >= 7.2 
 
 <b>Usage</b>
