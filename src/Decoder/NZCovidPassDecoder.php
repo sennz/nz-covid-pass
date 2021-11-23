@@ -18,7 +18,9 @@ use SenNZ\NZCovidPass\Decoder\ECKey;
 
 class NZCovidPassDecoder
 {
-    public function getNZPassData($raw_data) {
+    private $path;
+    public function getNZPassData($raw_data, $path="") {
+       $this->path = $path; 
        $data = $this->qrcode($raw_data);
        return $data;
     }
@@ -97,20 +99,29 @@ class NZCovidPassDecoder
     // Retrieve keys
     private function retrieveKeys() {
         // We retrieve the public keys
-        $uri = '../../cert/did.json';
+        $parent_dir = dirname(__FILE__,3);
+        $uri = $parent_dir . '/cert/did.json';
 
-        $is_file_expired = time() - filemtime($uri) > 24 * 3600;
-
-        if ($is_file_expired) {
-          $str = $this->retrieveKeysFromWeb();
-          if(!empty($str)){
-            $fp = fopen($uri, 'w');
-            fwrite($fp, $str);
-            fclose($fp);
+        if ($this->path != "") {
+          $uri = $this->path . '/did.json';
+          if (!file_exists($uri)) {
+            $is_file_expired = true;
           } else {
-            throw new \InvalidArgumentException('Unable to download did.json');
+            $is_file_expired = time() - filemtime($uri) > 24 * 3600;
+          }
+
+          if ($is_file_expired) {
+            $str = $this->retrieveKeysFromWeb();
+            if(!empty($str)){
+              $fp = fopen($uri, 'w');
+              fwrite($fp, $str);
+              fclose($fp);
+            } else {
+              throw new \InvalidArgumentException('Unable to download did.json');
+            }
           }
         }
+
         // We decode the JSON object we received
         $keys = json_decode(file_get_contents($uri), true, 512);
         return $keys;
