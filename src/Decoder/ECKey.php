@@ -55,7 +55,7 @@ class ECKey
   
     private static function getKey(JWK $jwk): string
     {
-        $nistCurveSize = self::getNistCurveSize($jwk->get('crv'));
+        $nistCurveSize = 256;
         $length = (int) ceil($nistCurveSize / 8);
 
         return
