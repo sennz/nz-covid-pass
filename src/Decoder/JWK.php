@@ -32,6 +32,34 @@ class JWK implements JsonSerializable
     {
         return $this->values;
     }
+    
+
+    /**
+     * Get the value with a specific key.
+     *
+     * @param string $key The key
+     *
+     * @return null|mixed
+     */
+    public function get(string $key)
+    {
+        if (!$this->has($key)) {
+            throw new InvalidArgumentException(sprintf('The value identified by "%s" does not exist.', $key));
+        }
+
+        return $this->values[$key];
+    }
+
+    /**
+     * Returns true if the JWK has the value identified by.
+     *
+     * @param string $key The key
+     */
+    public function has(string $key): bool
+    {
+        return \array_key_exists($key, $this->values);
+    }
+
 
 }
 
